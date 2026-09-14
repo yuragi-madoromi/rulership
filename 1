@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ハウス・ルーラーシップ配線図</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap');
+  :root{
+    --ink:#1b2a30; --panel:#25342f; --panel-2:#2e3e35;
+    --line:#4a4132; --gold:#c9974a; --gold-soft:#dcb876;
+    --text:#f0e6d2; --text-dim:#b5a58e; --plus:#8fae7f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:radial-gradient(ellipse at 20% -10%, #33443a 0%, transparent 55%),
+      radial-gradient(ellipse at 90% 110%, #3a2e42 0%, transparent 50%), var(--ink);
+    color:var(--text); font-family:'Zen Kaku Gothic New',sans-serif;
+    min-height:100vh; padding:26px 14px 70px;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+  header{text-align:center;margin-bottom:20px;}
+  header .eyebrow{font-family:'Shippori Mincho',serif;letter-spacing:.3em;font-size:11px;color:var(--gold-soft);margin-bottom:6px;}
+  h1{font-family:'Shippori Mincho',serif;font-weight:600;font-size:26px;margin:0 0 6px;}
+  header p{color:var(--text-dim);font-size:12.5px;margin:0; line-height:1.7;}
+
+  .card{
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line); border-radius:14px;
+    padding:18px; margin-bottom:16px;
+    box-shadow:0 20px 40px -20px rgba(0,0,0,.6);
+  }
+  .section-title{
+    text-align:center; color:var(--gold-soft); font-family:'Shippori Mincho',serif;
+    font-size:14px; letter-spacing:.2em; margin:22px 0 12px;
+  }
+  .toggle{ display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-bottom:16px;}
+  .toggle button{ flex:1; background:#1e2b28; color:var(--text-dim); border:none; padding:10px; font-family:inherit; font-size:13px; cursor:pointer;}
+  .toggle button.active{ background:var(--gold); color:#1e2b28; font-weight:600;}
+
+  .field-mini label{ font-size:11px; color:var(--text-dim); display:block; margin-bottom:4px; }
+  select, input[type="number"], input[type="date"], input[type="time"], input[type="text"]{
+    width:100%; background:#1e2b28; border:1px solid var(--line); color:var(--text);
+    padding:8px 8px; border-radius:7px; font-size:13px; font-family:inherit; box-sizing:border-box;
+  }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
+
+  .planet-row{
+    display:grid; grid-template-columns: 74px 1fr 64px;
+    gap:8px; align-items:center; margin-bottom:8px;
+  }
+  .planet-row .plabel{ font-size:13px; color:var(--gold-soft); }
+
+  .cusp-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px 12px; }
+  .cusp-row{ display:flex; align-items:center; gap:8px; }
+  .cusp-row .hnum{
+    width:34px; flex:none; font-family:'Shippori Mincho',serif; font-weight:700;
+    font-size:15px; color:var(--gold-soft); text-align:center;
+  }
+
+  .wire-item{
+    background:#1e2b28; border:1px solid var(--line); border-radius:10px;
+    padding:11px 14px; margin-bottom:8px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px;
+  }
+  .wire-item .wleft{ font-family:'Shippori Mincho',serif; font-size:16px; color:var(--gold-soft); }
+  .wire-item .wleft .sign{ font-size:12px; color:var(--text-dim); font-family:'Zen Kaku Gothic New',sans-serif; margin-left:4px; }
+  .wire-item .wright{ display:flex; gap:6px; flex-wrap:wrap; }
+  .wire-item .rtag{
+    font-size:12.5px; font-weight:700; padding:4px 10px; border-radius:14px;
+    background:rgba(201,151,74,0.16); color:var(--gold-soft); border:1px solid rgba(201,151,74,.35);
+  }
+  .wire-item .rtag.self{ background:rgba(143,174,127,0.18); color:var(--plus); border-color:rgba(143,174,127,.4); }
+
+  /* 逆引き：このハウスに何が来ているか、ひと目でわかるように */
+  .reverse-badge{
+    position:absolute; top:-8px; left:10px; font-size:10px; background:var(--gold);
+    color:#1e2b28; padding:1px 7px; border-radius:10px; font-weight:700;
+  }
+  .planet-loc-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(70px,1fr)); gap:8px; }
+  .planet-loc-card{
+    background:#1e2b28; border:1px solid var(--line); border-radius:10px;
+    padding:8px 4px; text-align:center;
+  }
+  .planet-loc-card .psym{ font-size:16px; color:var(--gold-soft); }
+  .planet-loc-card .pname{ font-size:10px; color:var(--text-dim); margin:2px 0; }
+  .planet-loc-card .phouse{ font-size:13px; font-weight:700; color:var(--text); }
+
+  footer{ text-align:center; color:#8a7a62; font-size:11px; margin-top:20px; line-height:1.7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">H O U S E &nbsp; R U L E R S H I P</div>
+    <h1>ハウス・ルーラーシップ配線図</h1>
+    <p>各ハウスのカスプサインの支配星が、いまどのハウスにいるかだけを見る、かんたん配線シート</p>
+  </header>
+
+  <div class="section-title">— 生年月日から自動計算 —</div>
+  <div class="card">
+    <p style="font-size:11px; color:var(--text-dim); line-height:1.7; margin:0 0 12px;">
+      ホールサイン方式（ASCのサイン＝1ハウス）で計算します。簡易計算なので、正確なハウスカスプがわかっている場合は下の「ハウスカスプ」欄で直接直してください。
+    </p>
+    <div class="grid2">
+      <div class="field-mini"><label>生年月日</label><input type="date" id="birthDate"></div>
+      <div class="field-mini"><label>出生時刻</label><input type="time" id="birthTime" step="60"></div>
+    </div>
+    <div class="grid2">
+      <div class="field-mini"><label>タイムゾーン（UTC±）</label><input type="number" id="birthTz" value="9" step="0.5"></div>
+      <div class="field-mini"><label>都道府県</label><select id="prefSel"></select></div>
+    </div>
+    <div class="field-mini" style="margin-bottom:8px;">
+      <label>市区町村</label>
+      <div style="display:flex; gap:6px;">
+        <input type="text" id="placeQuery" placeholder="例：渋谷区">
+        <button id="placeSearchBtn" type="button" style="flex:none; padding:0 12px; background:var(--gold); color:#1e2b28; border:none; border-radius:8px; font-weight:700; cursor:pointer;">検索</button>
+      </div>
+    </div>
+    <div id="placeResults" style="font-size:12px; margin-bottom:8px;"></div>
+    <div class="grid2">
+      <div class="field-mini"><label>緯度</label><input type="number" id="birthLat" value="35.68" step="0.01"></div>
+      <div class="field-mini"><label>経度</label><input type="number" id="birthLon" value="139.69" step="0.01"></div>
+    </div>
+    <button class="toggle" id="calcBtn" style="width:100%; padding:11px; background:var(--gold); color:#1e2b28; border:none; border-radius:8px; font-weight:700; cursor:pointer;">この日時・場所で計算する</button>
+    <div id="calcResult" style="font-size:12px; color:var(--text-dim); margin-top:8px;"></div>
+  </div>
+
+  <div class="section-title">— 天体：サイン と ハウス —</div>
+  <div class="card">
+    <p style="font-size:11px; color:var(--text-dim); line-height:1.7; margin:0 0 10px;">自動計算の結果です。違う場合はここで直接直せます。</p>
+    <div id="inputRows"></div>
+  </div>
+
+  <div class="section-title">— ハウスカスプ（サイン） —</div>
+  <div class="card">
+    <p style="font-size:11px; color:var(--text-dim); line-height:1.7; margin:0 0 10px;">ホールサイン方式で自動的に埋まります。別の方式（プラシダスなど）を使う場合はここで直接直してください。</p>
+    <div class="cusp-grid" id="cuspGrid"></div>
+  </div>
+
+  <div class="section-title">— 配線：どのハウスからどのハウスへ —</div>
+  <div class="card">
+    <div id="wireList"></div>
+  </div>
+
+  <div class="section-title">— 逆引き：天体は今どのハウス？ —</div>
+  <div class="card">
+    <div class="planet-loc-grid" id="planetLocGrid"></div>
+  </div>
+
+  <footer>
+    支配星（ルーラー）は伝統ルーラー・モダンルーラーの両方をまとめて表示しています（例：蠍座＝火星・冥王星、水瓶座＝土星・天王星、魚座＝木星・海王星）。品位の強さや象限による分析は含まれていません。
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   EPHEMERIS: simplified Keplerian-element planetary positions
+   ============================================================ */
+function rev(x){ x = x % 360; if(x<0) x+=360; return x; }
+const D2R = Math.PI/180;
+function sind(x){ return Math.sin(x*D2R); }
+function cosd(x){ return Math.cos(x*D2R); }
+function tand(x){ return Math.tan(x*D2R); }
+function atan2d(y,x){ return Math.atan2(y,x)/D2R; }
+function toDays(y,m,day,hourUT){
+  const d = 367*y - Math.floor(7*(y+Math.floor((m+9)/12))/4) + Math.floor(275*m/9) + day - 730530;
+  return d + hourUT/24;
+}
+const EPH_ELEMENTS = {
+  sun:     (d)=>({N:0, i:0, w: rev(282.9404 + 4.70935e-5*d), a:1.000000, e: 0.016709 - 1.151e-9*d, M: rev(356.0470 + 0.9856002585*d)}),
+  moon:    (d)=>({N: rev(125.1228 - 0.0529538083*d), i:5.1454, w: rev(318.0634 + 0.1643573223*d), a:60.2666, e:0.054900, M: rev(115.3654 + 13.0649929509*d)}),
+  mercury: (d)=>({N: rev(48.3313 + 3.24587e-5*d), i:7.0047 + 5.00e-8*d, w: rev(29.1241 + 1.01444e-5*d), a:0.387098, e:0.205635 + 5.59e-10*d, M: rev(168.6562 + 4.0923344368*d)}),
+  venus:   (d)=>({N: rev(76.6799 + 2.46590e-5*d), i:3.3946 + 2.75e-8*d, w: rev(54.8910 + 1.38374e-5*d), a:0.723330, e:0.006773 - 1.302e-9*d, M: rev(48.0052 + 1.6021302244*d)}),
+  mars:    (d)=>({N: rev(49.5574 + 2.11081e-5*d), i:1.8497 - 1.78e-8*d, w: rev(286.5016 + 2.92961e-5*d), a:1.523688, e:0.093405 + 2.516e-9*d, M: rev(18.6021 + 0.5240207766*d)}),
+  jupiter: (d)=>({N: rev(100.4542 + 2.76854e-5*d), i:1.3030 - 1.557e-7*d, w: rev(273.8777 + 1.64505e-5*d), a:5.20256, e:0.048498 + 4.469e-9*d, M: rev(19.8950 + 0.0830853001*d)}),
+  saturn:  (d)=>({N: rev(113.6634 + 2.38980e-5*d), i:2.4886 - 1.081e-7*d, w: rev(339.3939 + 2.97661e-5*d), a:9.55475, e:0.055546 - 9.499e-9*d, M: rev(316.9670 + 0.0334442282*d)}),
+  uranus:  (d)=>({N: rev(74.0005 + 1.3978e-5*d), i:0.7733 + 1.9e-8*d, w: rev(96.6612 + 3.0565e-5*d), a:19.18171 - 1.55e-8*d, e:0.047318 + 7.45e-9*d, M: rev(142.5905 + 0.011725806*d)}),
+  neptune: (d)=>({N: rev(131.7806 + 3.0173e-5*d), i:1.7700 - 2.55e-7*d, w: rev(272.8461 - 6.027e-6*d), a:30.05826 + 3.313e-8*d, e:0.008606 + 2.15e-9*d, M: rev(260.2471 + 0.005995147*d)}),
+  pluto:   (d)=>({N: 110.30, i:17.14, w: 113.83, a:39.48, e:0.2488, M: rev(14.86 + 0.003968789*d)}),
+};
+function solveKepler(M, e){
+  let E = M + (180/Math.PI)*e*sind(M)*(1+e*cosd(M));
+  for(let iter=0; iter<8; iter++){ const dM = M - (E - (180/Math.PI)*e*sind(E)); E += dM/(1 - e*cosd(E)); }
+  return E;
+}
+function eph_heliocentric(el){
+  const E = solveKepler(el.M, el.e);
+  const xv = el.a*(cosd(E) - el.e);
+  const yv = el.a*(Math.sqrt(1-el.e*el.e)*sind(E));
+  const v = atan2d(yv,xv);
+  const r = Math.sqrt(xv*xv+yv*yv);
+  const vw = v + el.w;
+  return {
+    xh: r*(cosd(el.N)*cosd(vw) - sind(el.N)*sind(vw)*cosd(el.i)),
+    yh: r*(sind(el.N)*cosd(vw) + cosd(el.N)*sind(vw)*cosd(el.i)),
+  };
+}
+function eph_planetLongitude(planet, d){
+  const sunH = eph_heliocentric(EPH_ELEMENTS.sun(d));
+  if(planet==='sun') return rev(atan2d(sunH.yh, sunH.xh));
+  if(planet==='moon'){ const h = eph_heliocentric(EPH_ELEMENTS.moon(d)); return rev(atan2d(h.yh, h.xh)); }
+  const h = eph_heliocentric(EPH_ELEMENTS[planet](d));
+  const xEarth = -sunH.xh, yEarth = -sunH.yh;
+  return rev(atan2d(h.yh - yEarth, h.xh - xEarth));
+}
+function eph_obliquity(d){ return 23.4393 - 3.563e-7*d; }
+function eph_ascendant(y,m,day,hourUT,lonDeg,latDeg){
+  const d0 = toDays(y,m,day,0);
+  const sunLon0 = eph_planetLongitude('sun', d0);
+  const GMST0 = rev(sunLon0 + 180)/15;
+  const LST = GMST0 + hourUT + lonDeg/15;
+  const RAMC = rev(LST*15);
+  const d = toDays(y,m,day,hourUT);
+  const eps = eph_obliquity(d);
+  const yterm = -cosd(RAMC);
+  const xterm = sind(RAMC)*cosd(eps) + tand(latDeg)*sind(eps);
+  return rev(atan2d(yterm, xterm) + 180);
+}
+
+/* ============================================================
+   DATA
+   ============================================================ */
+const PLANETS = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto'];
+const PSYM = {sun:'☉',moon:'☽',mercury:'☿',venus:'♀',mars:'♂',jupiter:'♃',saturn:'♄',uranus:'♅',neptune:'♆',pluto:'♇'};
+const PNAME = {sun:'太陽',moon:'月',mercury:'水星',venus:'金星',mars:'火星',jupiter:'木星',saturn:'土星',uranus:'天王星',neptune:'海王星',pluto:'冥王星'};
+const SIGNS = ['♈牡羊座','♉牡牛座','♊双子座','♋蟹座','♌獅子座','♍乙女座','♎天秤座','♏蠍座','♐射手座','♑山羊座','♒水瓶座','♓魚座'];
+// ドミサイル：伝統・モダンをまとめて1つのリストに（例：蠍座＝火星＋冥王星）
+const DOMICILE = [['mars'],['venus'],['mercury'],['moon'],['sun'],['mercury'],['venus'],['mars','pluto'],['jupiter'],['saturn'],['saturn','uranus'],['jupiter','neptune']];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {};
+PLANETS.forEach((p,i)=>{ state[p] = {sign:0, house:((i)%12)+1}; });
+const houseCusps = Array.from({length:12}, (_,i)=> i % 12);
+
+/* ============================================================
+   Prefecture list & place search
+   ============================================================ */
+const PREFECTURES = [
+  '北海道','青森県','岩手県','宮城県','秋田県','山形県','福島県',
+  '茨城県','栃木県','群馬県','埼玉県','千葉県','東京都','神奈川県',
+  '新潟県','富山県','石川県','福井県','山梨県','長野県','岐阜県','静岡県','愛知県',
+  '三重県','滋賀県','京都府','大阪府','兵庫県','奈良県','和歌山県',
+  '鳥取県','島根県','岡山県','広島県','山口県',
+  '徳島県','香川県','愛媛県','高知県',
+  '福岡県','佐賀県','長崎県','熊本県','大分県','宮崎県','鹿児島県','沖縄県'
+];
+const prefSel = document.getElementById('prefSel');
+prefSel.innerHTML = '<option value="">選択してください</option>' + PREFECTURES.map(p=>`<option value="${p}">${p}</option>`).join('');
+
+document.getElementById('placeSearchBtn').addEventListener('click', async ()=>{
+  const pref = prefSel.value;
+  const city = document.getElementById('placeQuery').value.trim();
+  const resultsEl = document.getElementById('placeResults');
+  if(!pref && !city){ resultsEl.textContent = '都道府県または市区町村を入力してください。'; return; }
+  const q = [pref, city, 'Japan'].filter(Boolean).join(' ');
+  resultsEl.textContent = '検索中…';
+  try{
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=5&accept-language=ja&q=' + encodeURIComponent(q);
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if(!res.ok) throw new Error('検索に失敗しました（' + res.status + '）');
+    const data = await res.json();
+    if(!data.length){ resultsEl.textContent = '候補が見つかりませんでした。'; return; }
+    resultsEl.innerHTML = data.map(d=>
+      `<div style="padding:8px 10px; border:1px solid var(--line); border-radius:8px; margin-bottom:6px; cursor:pointer;" data-lat="${d.lat}" data-lon="${d.lon}" data-name="${d.display_name}" class="place-choice">${d.display_name}</div>`
+    ).join('');
+    resultsEl.querySelectorAll('.place-choice').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        document.getElementById('birthLat').value = parseFloat(el.dataset.lat).toFixed(3);
+        document.getElementById('birthLon').value = parseFloat(el.dataset.lon).toFixed(3);
+        resultsEl.innerHTML = `<div style="color:var(--gold-soft);">選択：${el.dataset.name}</div>`;
+      });
+    });
+  }catch(e){
+    resultsEl.textContent = '検索でエラーが発生しました：' + e.message;
+  }
+});
+
+/* ============================================================
+   Planet input rows (sign + house only — no degree needed here)
+   ============================================================ */
+const inputRows = document.getElementById('inputRows');
+PLANETS.forEach(p=>{
+  const row = document.createElement('div');
+  row.className = 'planet-row';
+  const signOpts = SIGNS.map((s,i)=>`<option value="${i}">${s}</option>`).join('');
+  const houseOpts = Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}H</option>`).join('');
+  row.innerHTML = `
+    <div class="plabel">${PSYM[p]} ${PNAME[p]}</div>
+    <select data-p="${p}" data-f="sign">${signOpts}</select>
+    <select data-p="${p}" data-f="house">${houseOpts}</select>
+  `;
+  inputRows.appendChild(row);
+});
+function syncInputRowsFromState(){
+  inputRows.querySelectorAll('select[data-f="sign"]').forEach(el=>{ el.value = state[el.dataset.p].sign; });
+  inputRows.querySelectorAll('select[data-f="house"]').forEach(el=>{ el.value = state[el.dataset.p].house; });
+}
+syncInputRowsFromState();
+inputRows.addEventListener('input', (e)=>{
+  const p = e.target.dataset.p, f = e.target.dataset.f;
+  if(!p) return;
+  state[p][f] = parseInt(e.target.value,10);
+  renderAll();
+});
+
+/* ============================================================
+   House cusp rows
+   ============================================================ */
+const cuspGrid = document.getElementById('cuspGrid');
+for(let h=1; h<=12; h++){
+  const row = document.createElement('div');
+  row.className = 'cusp-row';
+  const signOpts = SIGNS.map((s,i)=>`<option value="${i}">${s}</option>`).join('');
+  row.innerHTML = `<div class="hnum">${h}H</div><select data-h="${h}">${signOpts}</select>`;
+  cuspGrid.appendChild(row);
+}
+function syncCuspGridFromState(){
+  cuspGrid.querySelectorAll('select').forEach(el=>{ el.value = houseCusps[parseInt(el.dataset.h,10)-1]; });
+}
+syncCuspGridFromState();
+cuspGrid.addEventListener('input', (e)=>{
+  const h = e.target.dataset.h;
+  if(!h) return;
+  houseCusps[parseInt(h,10)-1] = parseInt(e.target.value,10);
+  renderAll();
+});
+
+/* ============================================================
+   Rendering: wiring list + reverse lookup
+   ============================================================ */
+function renderWiring(){
+  const list = document.getElementById('wireList');
+  let html = '';
+  for(let h=1; h<=12; h++){
+    const signIdx = houseCusps[h-1];
+    const rulers = DOMICILE[signIdx];
+    const tags = rulers.map(r=>{
+      const rHouse = state[r] ? state[r].house : null;
+      const isSelf = (rHouse === h);
+      return `<span class="rtag ${isSelf?'self':''}">${PSYM[r]} ${PNAME[r]}：${rHouse?rHouse+'H':'?'}${isSelf?'（自己完結）':''}</span>`;
+    }).join('');
+    html += `<div class="wire-item">
+      <div class="wleft">${h}H<span class="sign">${SIGNS[signIdx]}</span></div>
+      <div class="wright">${tags}</div>
+    </div>`;
+  }
+  list.innerHTML = html;
+}
+function renderPlanetLocations(){
+  const grid = document.getElementById('planetLocGrid');
+  grid.innerHTML = PLANETS.map(p=>`
+    <div class="planet-loc-card">
+      <div class="psym">${PSYM[p]}</div>
+      <div class="pname">${PNAME[p]}</div>
+      <div class="phouse">${state[p].house}H</div>
+    </div>
+  `).join('');
+}
+function renderAll(){
+  renderWiring();
+  renderPlanetLocations();
+}
+renderAll();
+
+/* ============================================================
+   Birth-data auto-calc button
+   ============================================================ */
+document.getElementById('calcBtn').addEventListener('click', ()=>{
+  const dateVal = document.getElementById('birthDate').value;
+  const timeVal = document.getElementById('birthTime').value;
+  const tz = parseFloat(document.getElementById('birthTz').value) || 0;
+  const lat = parseFloat(document.getElementById('birthLat').value);
+  const lon = parseFloat(document.getElementById('birthLon').value);
+  const resultEl = document.getElementById('calcResult');
+
+  if(!dateVal || !timeVal || isNaN(lat) || isNaN(lon)){
+    resultEl.textContent = '生年月日・時刻・緯度・経度をすべて入力してください。';
+    return;
+  }
+  const [y,m,day] = dateVal.split('-').map(Number);
+  const [hh,mm] = timeVal.split(':').map(Number);
+  const hourUT = (hh + mm/60) - tz;
+  const d = toDays(y, m, day, hourUT);
+
+  PLANETS.forEach(p=>{
+    const lonp = eph_planetLongitude(p, d);
+    state[p].sign = Math.floor(lonp/30);
+  });
+
+  const ascLon = eph_ascendant(y, m, day, hourUT, lon, lat);
+  const ascSign = Math.floor(ascLon/30);
+  PLANETS.forEach(p=>{
+    state[p].house = ((state[p].sign - ascSign + 12) % 12) + 1;
+  });
+  for(let h=1; h<=12; h++){ houseCusps[h-1] = (ascSign + (h-1)) % 12; }
+
+  syncInputRowsFromState();
+  syncCuspGridFromState();
+  resultEl.innerHTML = `計算しました。ASC（1ハウス）は <strong style="color:var(--gold-soft)">${SIGNS[ascSign]}</strong> です。`;
+  renderAll();
+});
+</script>
+</body>
+</html>
